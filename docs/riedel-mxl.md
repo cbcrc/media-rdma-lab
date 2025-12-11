@@ -326,6 +326,7 @@ Open a new session (tab) on the Initiator Server and run:
 
 <div style="border:1px solid #333; padding:10px; border-radius:4px; background:#f7f7f7;">
 
+<pre>
 [2025-10-29 18:39:09.640] [info] [Endpoint.cpp:109] Endpoint 17637498168822997553 created
 [2025-10-29 18:39:09.689] [info] [RCTarget.cpp:147] Received connected event notification, now connected.
 [2025-10-29 18:39:09.691] [info] [demo.cpp:503] Committed grain with index=33018 commitedSize=5529600 grainSize=5529600
@@ -339,6 +340,7 @@ Open a new session (tab) on the Initiator Server and run:
 [2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33027 commitedSize=5529600 grainSize=5529600
 [2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33028 commitedSize=5529600 grainSize=5529600
 [2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33029 commitedSize=5529600 grainSize=5529600
+</pre>
 
 </div>
 
@@ -350,9 +352,13 @@ Open a new session (tab) on the Initiator Server and run:
 **Initiator Server:**  
 <div style="border:1px solid #333; padding:10px; border-radius:4px; background:#f7f7f7;">
 
+<pre>
+
 2025-10-29 18:39:11.495 [info] [Endpoint.cpp:109] Endpoint 4403181769275151222 created
 2025-10-29 18:39:11.495 [info] [RCInitializer.cpp:95] Endpoint has been idle for 534406861ms, activating
 2025-10-29 18:39:11.746 [info] [RCInitiator.cpp:130] Endpoint is now connected
+
+</pre>
 
 </div>
 
