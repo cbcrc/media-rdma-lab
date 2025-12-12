@@ -165,7 +165,7 @@ exit
 If the session state is Active, verify that the peer switch configuration is correct and that the interface link is up.
 The session should display Established once peering is active.
 
-## 7. Validation Commands and Expected Output
+## 7. Validation Commands 
 
 The following commands confirm BGP operation:
 
@@ -178,7 +178,5 @@ The following commands confirm BGP operation:
 | `sudo vtysh -c "show ip route"`| Confirm advertised and learned routes | Loopback visible in `RIB` |
 | `ping <peer_ip>`| Test connectivity to switch | Successful response |
 
-**[Reserved Section for Sample Pass Output]**
 
-(successful BGP session screenshot here.)
 
