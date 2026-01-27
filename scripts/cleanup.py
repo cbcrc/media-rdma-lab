@@ -87,13 +87,13 @@ class MXLCleanup:
             # Stop MXL processes
             commands = [
                 "pkill -f mxl-fabrics-demo",
-                "pkill -f mxl-gst-videotestsrc",
+                "pkill -f mxl-gst-testsrc",
                 "sleep 2",
                 "pkill -9 -f mxl-fabrics-demo",
-                "pkill -9 -f mxl-gst-videotestsrc",
+                "pkill -9 -f mxl-gst-testsrc",
                 # Clean up flow files and shared memory
-                "rm -rf ~/portable/mxl_flow_files",
-                "rm -rf ~/portable/mxl_test_data",
+                "rm -rf ~/portable-mxl-v1-1/mxl_flow_files",
+                "rm -rf ~/portable-mxl-v1-1/mxl_test_data",
                 "sudo rm -rf /dev/shm/mxl",
                 # Clean up log files in /tmp
                 "rm -f /tmp/target_*.log",

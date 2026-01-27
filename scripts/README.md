@@ -1,3 +1,17 @@
+
+# Simplified Sequence Diagram: RDMA Test (3 Stages)
+
+```mermaid
+sequenceDiagram
+   participant RemoteComputer
+   participant Initiator
+   participant Target
+
+   RemoteComputer->>Initiator: Start test & launch GST sources
+   Initiator->>Target: Establish video/data flows
+   RemoteComputer->>Initiator: Collect logs & status
+   RemoteComputer->>Target: Collect logs & status
+```
 # Scripts for creating multiple flows
 
 ## Multiple MXL flows

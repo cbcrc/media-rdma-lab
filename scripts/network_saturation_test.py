@@ -4,6 +4,8 @@ MXL RDMA Network Saturation Test Framework
 
 This script orchestrates multiple MXL flows to saturate network bandwidth
 between target and initiator servers using RDMA fabric connections.
+
+This Script successfully performs with the currnt MXL version: PR266
 """
 
 import json
@@ -125,7 +127,7 @@ class MXLSaturationTest:
                 "rdma_interface_ip": "10.0.0.100",
                 "username": "user",
                 "mxl_demo_path": "./mxl-fabrics-demo",
-                "mxl_gst_path": "./mxl-gst-videotestsrc",
+                "mxl_gst_path": "./mxl-gst-testsrc",
                 "base_service_port": 5000,
                 "shared_memory_path": "/dev/shm/mxl"
             },
@@ -134,7 +136,7 @@ class MXLSaturationTest:
                 "rdma_interface_ip": "10.0.0.101",
                 "username": "user",
                 "mxl_demo_path": "./mxl-fabrics-demo",
-                "mxl_gst_path": "./mxl-gst-videotestsrc",
+                "mxl_gst_path": "./mxl-gst-testsrc",
                 "shared_memory_path": "/dev/shm/mxl"
             },
             "test_parameters": {
@@ -237,12 +239,14 @@ class MXLSaturationTest:
         # We need to capture target-info from initial output before backgrounding
         # Use signal handling to make the process more resilient to interruptions
         command = (
-            f"cd ~/portable && "
+            f"cd ~/portable-mxl-v1-1 && "
             f"nohup bash -c 'trap \"\" INT TERM; {mxl_demo_path} -d {shared_memory} -f {flow_file} "
             f"--node {rdma_interface_ip} --service {service_port} -p verbs' > /tmp/target_{service_port}.log 2>&1 & "
-            f"sleep 3; "  # Give process time to start and output target-info
-            f"head -50 /tmp/target_{service_port}.log; "
-            f"echo 'Target backgrounded'"
+            f"for i in {{1..15}}; do "
+            f"grep 'Target info:' /tmp/target_{service_port}.log && break; "
+            f"sleep 1; "
+            f"done; "
+            f"cat /tmp/target_{service_port}.log"
         )
         
         logger.info(f"Starting target for flow {flow_config.flow_id} on RDMA interface {rdma_interface_ip}:{service_port}")
@@ -329,7 +333,7 @@ class MXLSaturationTest:
         raise RuntimeError("Failed to extract target-info from mxl-fabrics-demo output. Cannot proceed with test.")
     
     def setup_server_environment(self, server_config: dict, server_type: str) -> bool:
-        """Setup server environment (portable directory and shared memory)"""
+        """Setup server environment (portable-mxl-v1-1 directory and shared memory)"""
         management_ip = server_config["management_ip"]
         username = server_config["username"]
         
@@ -342,7 +346,7 @@ class MXLSaturationTest:
             
             # Setup commands
             setup_commands = [
-                "mkdir -p ~/portable",
+                "mkdir -p ~/portable-mxl-v1-1",
                 "mkdir -p /dev/shm/mxl"
             ]
 
@@ -424,7 +428,7 @@ class MXLSaturationTest:
             sftp = ssh.open_sftp()
             
             # Change to portable directory
-            sftp.chdir('portable')
+            sftp.chdir('portable-mxl-v1-1')
             
             # Create remote directory for flow files
             try:
@@ -463,7 +467,7 @@ class MXLSaturationTest:
             sftp = ssh.open_sftp()
             
             # Change to portable directory
-            sftp.chdir('portable')
+            sftp.chdir('portable-mxl-v1-1')
             
             # Create remote directory
             try:
@@ -504,8 +508,8 @@ class MXLSaturationTest:
             for flow in self.flows:
                 # Simple command to start GST source in background with flow overlay text
                 command = (
-                    f"cd ~/portable && nohup bash -c 'trap \"\" INT TERM; {mxl_gst_path} -d {shared_memory} "
-                    f"-f mxl_test_data/{flow.flow_label}.json -t \"{flow.flow_label}\"' > /tmp/gst_source_{flow.flow_label}.log 2>&1 &"
+                    f"cd ~/portable-mxl-v1-1 && nohup bash -c 'trap \"\" INT TERM; {mxl_gst_path} -d {shared_memory} "
+                    f"-v mxl_test_data/{flow.flow_label}.json -t \"{flow.flow_label}\"' > /tmp/gst_source_{flow.flow_label}.log 2>&1 &"
                 )
                 
                 stdin, stdout, stderr = ssh.exec_command(command)
@@ -538,7 +542,7 @@ class MXLSaturationTest:
             for target_info in self.target_infos:
                 # Use RDMA interface IPs for both --node and target connection
                 command = (
-                    f"cd ~/portable && nohup bash -c 'trap \"\" INT TERM; {mxl_demo_path} -d {shared_memory} -f {target_info.flow_id} "
+                    f"cd ~/portable-mxl-v1-1 && nohup bash -c 'trap \"\" INT TERM; {mxl_demo_path} -d {shared_memory} -f {target_info.flow_id} "
                     f"-i --node {rdma_interface_ip} --service {target_info.service_port} "
                     f"-p verbs --target-info {target_info.target_token}' "
                     f"> /tmp/demo_initiator_{target_info.flow_id}.log 2>&1 &"
@@ -695,7 +699,7 @@ class MXLSaturationTest:
             ssh.connect(management_ip, username=username)
             
             # Check for different types of processes
-            stdin, stdout, stderr = ssh.exec_command("pgrep -f 'mxl-gst-videotestsrc' | wc -l")
+            stdin, stdout, stderr = ssh.exec_command("pgrep -f 'mxl-gst-testsrc' | wc -l")
             gst_count = int(stdout.read().decode().strip())
             
             stdin, stdout, stderr = ssh.exec_command("pgrep -f 'mxl-fabrics-demo.*-i' | wc -l")

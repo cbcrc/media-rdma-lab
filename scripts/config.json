@@ -4,7 +4,7 @@
     "rdma_interface_ip": "10.164.138.234",
     "username": "lab",
     "mxl_demo_path": "./mxl-fabrics-demo",
-    "mxl_gst_path": "./mxl-gst-videotestsrc",
+    "mxl_gst_path": "./mxl-gst-testsrc",
     "base_service_port": 5000,
     "shared_memory_path": "/dev/shm/mxl"
   },
@@ -13,7 +13,7 @@
     "rdma_interface_ip": "10.164.138.236",
     "username": "lab",
     "mxl_demo_path": "./mxl-fabrics-demo", 
-    "mxl_gst_path": "./mxl-gst-videotestsrc",
+    "mxl_gst_path": "./mxl-gst-testsrc",
     "shared_memory_path": "/dev/shm/mxl"
   },
   "test_parameters": {
