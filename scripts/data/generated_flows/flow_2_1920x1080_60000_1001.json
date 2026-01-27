@@ -1,0 +1,41 @@
+{
+  "description": "Saturation Test Flow 2 - 1920x1080",
+  "id": "3567954b-8ac2-2bf8-6a03-7cac463d511f",
+  "tags": {
+    "urn:x-nmos:tag:grouphint/v1.0": [
+      "Media Function XYZ:Video"
+    ]
+  },
+  "format": "urn:x-nmos:format:video",
+  "label": "flow_2_1920x1080_60000_1001",
+  "parents": [],
+  "media_type": "video/v210",
+  "grain_rate": {
+    "numerator": 60000,
+    "denominator": 1001
+  },
+  "frame_width": 1920,
+  "frame_height": 1080,
+  "interlace_mode": "progressive",
+  "colorspace": "BT709",
+  "components": [
+    {
+      "name": "Y",
+      "width": 1920,
+      "height": 1080,
+      "bit_depth": 10
+    },
+    {
+      "name": "Cb",
+      "width": 960,
+      "height": 1080,
+      "bit_depth": 10
+    },
+    {
+      "name": "Cr",
+      "width": 960,
+      "height": 1080,
+      "bit_depth": 10
+    }
+  ]
+}
