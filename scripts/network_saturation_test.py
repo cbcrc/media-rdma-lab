@@ -5,7 +5,7 @@ MXL RDMA Network Saturation Test Framework
 This script orchestrates multiple MXL flows to saturate network bandwidth
 between target and initiator servers using RDMA fabric connections.
 
-This Script successfully performs with the currnt MXL version: PR266
+This version has the ability to tag the flows 
 """
 
 import json
@@ -16,6 +16,7 @@ import time
 import logging
 import argparse
 import os
+from dotenv import load_dotenv
 import threading
 from pathlib import Path
 from dataclasses import dataclass, asdict
@@ -247,6 +248,7 @@ class MXLSaturationTest:
             f"sleep 1; "
             f"done; "
             f"cat /tmp/target_{service_port}.log"
+            
         )
         
         logger.info(f"Starting target for flow {flow_config.flow_id} on RDMA interface {rdma_interface_ip}:{service_port}")
@@ -325,7 +327,7 @@ class MXLSaturationTest:
             # Look for base64-like strings (common pattern for target-info)
             if len(line) > 100 and line.replace('+', '').replace('/', '').replace('=', '').isalnum():
                 logger.info(f"Found potential target-info: {line[:50]}...")
-                return line
+                return line 
         
         # Last resort: generate a placeholder (this should be replaced with proper parsing)
         logger.error("Could not extract target-info from output. This is critical for initiator connections.")
@@ -492,7 +494,7 @@ class MXLSaturationTest:
             return False
     
     def start_initiator_sources(self) -> bool:
-        """Start mxl-gst-videotestsrc instances on initiator"""
+        """Start mxl-gst-testsrc instances on initiator"""
         management_ip = self.config["initiator_server"]["management_ip"]
         username = self.config["initiator_server"]["username"]
         mxl_gst_path = self.config["initiator_server"]["mxl_gst_path"]
@@ -560,6 +562,67 @@ class MXLSaturationTest:
             logger.error(f"Failed to start initiator connections: {e}")
             return False
     
+    def configure_uc3_qos(self) -> bool:
+        load_dotenv()  # Load environment variables from .env file
+        SUDO_PASSWORD = os.getenv("SUDO_PASSWORD")
+        
+        #utalizing  DSCP marking 
+        rdma_interface = "rocep152s0f0"
+        interface = "enp152s0f0np0"
+        port = 1
+
+        logger.info(f"Configuring QoS on {interface}: ALL traffic → UC3 (DSCP 24 / TOS 96)")
+
+        commands = [
+            
+            # ToS 96
+            f"sudo mkdir -p /sys/kernel/config/rdma_cm/{rdma_interface}/ports/{port}",
+            f"sudo sh -c 'echo 96 > /sys/kernel/config/rdma_cm/{rdma_interface}/ports/{port}/default_roce_tos'",
+            
+            #Optional
+            f"cat /sys/kernel/config/rdma_cm/{rdma_interface}/ports/{port}/default_roce_tos"
+            
+            
+        ]
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.config["initiator_server"]["management_ip"],username=self.config["initiator_server"]["username"])
+            
+            for cmd in commands:
+                if cmd.strip().startswith("sudo "):
+                    full_cmd = cmd.replace("sudo ", "sudo -S ", 1)  # Add -S once
+                else:
+                    full_cmd = cmd
+
+                logger.debug(f"Executing: {full_cmd}")
+                stdin, stdout, stderr = ssh.exec_command(full_cmd)
+
+                if cmd.strip().startswith("sudo "):
+                    stdin.write(SUDO_PASSWORD + "\n")
+                    stdin.flush()  # Important!
+
+                exit_status = stdout.channel.recv_exit_status()
+                out = stdout.read().decode().strip()
+                err = stderr.read().decode().strip()
+
+                if exit_status != 0:
+                    logger.error(f"Failed (exit {exit_status}): {full_cmd}")
+                    logger.error(f"stderr: {err}")
+                else:
+                    if out:
+                        logger.info(f"Output: {out}")
+                        
+            ssh.close()
+
+            logger.info("QoS configured: DSCP 24 → UC3 active")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to configure QoS: {e}")
+            return False
+
+    
     def run_saturation_test(self, num_flows: int = None) -> bool:
         """Run the complete network saturation test"""
         if num_flows is None:
@@ -597,6 +660,10 @@ class MXLSaturationTest:
             # Step 7: Transfer files to initiator
             all_files = flow_files + [mapping_file]
             if not self.transfer_files_to_initiator(all_files):
+                return False
+            #take into account Qos
+            if not self.configure_uc3_qos():
+                logger.error("Failed to configure QoS on initiator")
                 return False
             
             # Step 8: Start video test sources on initiator
@@ -853,6 +920,8 @@ class MXLSaturationTest:
         except Exception as e:
             logger.error(f"❌ Failed to collect logs: {e}")
             logger.info("💡 TIP: Check SSH connectivity and file permissions")
+            
+    
 
 def main():
     parser = argparse.ArgumentParser(description="MXL RDMA Network Saturation Test")
@@ -930,13 +999,15 @@ def dry_run_preview(test, num_flows):
         logger.info(f"   Flow {i+1}: mxl-fabrics-demo --service {port} --node {test.config['target_server']['rdma_interface_ip']}")
     
     logger.info("\n🚀 Initiator Commands (would be executed):")
-    logger.info(f"   GST Sources: {len(test.flows)} x mxl-gst-videotestsrc")
+    logger.info(f"   GST Sources: {len(test.flows)} x mxl-gst-testsrc")
     logger.info(f"   Demo Connections: {len(test.flows)} x mxl-fabrics-demo -i")
     
     logger.info("\n📁 Files that would be created:")
     logger.info(f"   • {len(test.flows)} flow JSON files")
     logger.info(f"   • Target info mapping file")
     logger.info(f"   • Log files in /tmp/ on both servers")
+    
+
 
 def show_troubleshooting_guide():
     """Display comprehensive troubleshooting guide"""
@@ -985,7 +1056,7 @@ def show_troubleshooting_guide():
     
     print("\n📞 MANUAL VERIFICATION:")
     print("   • SSH access: ssh user@server 'hostname'")
-    print("   • MXL binaries: ssh server 'ls -la ~/portable/mxl-*'")
+    print("   • MXL binaries: ssh server 'ls -la ~/portable-mxl-v1-1/mxl-*'")
     print("   • RDMA interfaces: ssh server 'ip addr | grep rdma_ip'")
     print("   • Process status: ssh server 'pgrep -fl mxl'")
     print("   • Log files: ssh server 'ls -la /tmp/{target,gst,demo}_*.log'")

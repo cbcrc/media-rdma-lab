@@ -3,6 +3,9 @@
 MXL Test Cleanup Script
 
 Stops all MXL processes and cleans up test data.
+
+Cleanup for tagging the processes
+
 """
 
 import subprocess
@@ -11,6 +14,8 @@ import argparse
 import paramiko
 import json
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -65,6 +70,8 @@ class MXLCleanup:
             return False
     
     def cleanup_remote_processes(self, server_config: dict) -> bool:
+        load_dotenv()  # Load environment variables from .env file
+        SUDO_PASSWORD = os.getenv("SUDO_PASSWORD")
         """Stop MXL processes on remote server"""
         if not server_config:
             return True
@@ -78,6 +85,12 @@ class MXLCleanup:
             return False
             
         logger.info(f"Cleaning up MXL processes on {server_ip}")
+        
+        
+        rdma_interface = "rocep152s0f0"
+        port = 1
+        
+        
         
         try:
             ssh = paramiko.SSHClient()
@@ -99,14 +112,36 @@ class MXLCleanup:
                 "rm -f /tmp/target_*.log",
                 "rm -f /tmp/target_output_*.log",
                 "rm -f /tmp/gst_source_*.log",
-                "rm -f /tmp/demo_initiator_*.log"
+                "rm -f /tmp/demo_initiator_*.log",
+                f"sudo sh -c 'echo 0 > /sys/kernel/config/rdma_cm/{rdma_interface}/ports/{port}/default_roce_tos'"
             ]
             
             for cmd in commands:
-                stdin, stdout, stderr = ssh.exec_command(cmd)
-                stdout.read()  # Wait for completion
+                if cmd.strip().startswith("sudo "):
+                    full_cmd = cmd.replace("sudo ", "sudo -S ", 1)  # Add -S once
+                else:
+                    full_cmd = cmd
+
+                logger.debug(f"Executing: {full_cmd}")
+                stdin, stdout, stderr = ssh.exec_command(full_cmd)
+
+                if cmd.strip().startswith("sudo "):
+                    stdin.write(SUDO_PASSWORD + "\n")
+                    stdin.flush()  # Important!
+
+                exit_status = stdout.channel.recv_exit_status()
+                out = stdout.read().decode().strip()
+                err = stderr.read().decode().strip()
+
+                if exit_status != 0:
+                    logger.error(f"Failed (exit {exit_status}): {full_cmd}")
+                    logger.error(f"stderr: {err}")
+                else:
+                    if out:
+                        logger.info(f"Output: {out}")
                 
             ssh.close()
+            
             logger.info(f"Remote cleanup completed for {server_ip}")
             return True
             

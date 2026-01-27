@@ -84,6 +84,7 @@ Edit `config.json` to specify your target and initiator server details:
    - Connects `mxl-fabrics-demo` initiators to targets
 6. **Monitoring**: Tracks bandwidth and process status
 7. **Cleanup**: Removes processes, files, and shared memory
+8. **.env file**: Create an env file where SUDO_PASSWORD is the password to log into the servers
 
 **Key Features:**
 
