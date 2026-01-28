@@ -1,6 +1,6 @@
-# MXL-Riedel RDMA Build and Testing Guide
+# MXL-Fabrics-API RDMA Build and Testing Guide
 
-This document provides a complete walkthrough for building and testing the **MXL-Riedel RDMA** environment on Ubuntu 22.04 and 24.04 systems.  
+This document provides a complete walkthrough for building and testing the **MXL-Fabrics-API** environment on Ubuntu 22.04 and 24.04 systems.  
 It covers installation prerequisites, build instructions, environment setup, test execution, and important notes for maintaining consistency between test servers.
 
 ## What is MXL and Why Use It?
@@ -28,7 +28,7 @@ MXL provides:
 - **APIs** for creating and managing media flows (e.g., reading/writing grains).  
 - A **data model** describing the structure and handling of grains.  
 
-By allowing processes to share or transfer grains directly through shared memory or RDMA, MXL significantly reduces latency and CPU overhead, avoiding the traditional packet-based transmission model
+By allowing processes to share or transfer grains directly through shared memory or RDMA, MXL significantly reduces latency and CPU overhead, avoiding the traditional packet-based transmission model.
 
 MXL supports two main modes for sharing grains:
 
@@ -57,7 +57,7 @@ MXL supports two main modes for sharing grains:
 
 ## 1. Before You Begin
 
-This guide explains how to build and test the **MXL RDMA** environment directly on physical servers.  
+This guide explains how to build and test the **MXL Fabrics API RDMA** environment directly on physical servers.
 It assumes an intermediate understanding of RDMA and Libfabric concepts.
 
 ### Required Equipment
@@ -134,9 +134,9 @@ ls
 # dmf-mxl/  tools/  scripts/
 ```
 
-### 3.4. Switch the submodule to Riedel's [dmf-mxl/mxl](https://github.com/dmf-mxl/mxl) fork
+### 3.4. Switch the submodule to Fabrics-API [dmf-mxl/mxl](https://github.com/dmf-mxl/mxl) fork
 
-Review [PR#78](https://github.com/dmf-mxl/mxl/pull/78) to identify the source `repository:branch` for the pull request. Add the parent repository as a new remote and check out the branch associated with the PR.
+Review 'Fabrics 2/2: Implementation of the Fabrics API' to identify the repository and branch containing the current Fabrics implementation. Add the parent repository as a new remote and check out the branch containing the Fabrics implementation.
 
 ```bash
 cd dmf-mxl
@@ -144,7 +144,7 @@ git remote -v # There should be 1 remote: origin
 git remote add rdma https://github.com/jonasohland/mxl.git
 git remote -v # There should be 2 remotes: origin and rdma
 git fetch rdma
-git checkout mxl-fabrics-squash
+git checkout rdma/feature/fabrics/jonas/protocols
 ```
 
 ## 4. Building MXL (Ubuntu 22.04 / 24.04)
@@ -192,8 +192,118 @@ From the repository root (~/mxl-hands-on):
 ```bash
 ./build_all.sh
 ```
+### 4.3 Package Built Resources
 
-Upon completion, confirm that no build errors are reported in the terminal output.
+Upon successful completion of the build process, the resulting resources should be packaged into a portable archive. This archive is then ready for distribution and deployment across various test environments.
+
+#### 4.3.1 Create the portable build directory
+
+```bash
+cd ~/mxl-hands-on
+mkdir ../portable-mxl-<version_id>
+```
+
+This creates a directory to hold all packaged build artifacts.
+
+#### 4.3.2 Copy all build artifacts
+
+Copy all necessary libraries, tools, and configuration files into the portable directory:
+
+```bash
+# Copy shared library files required for runtime execution
+cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/lib/*.so* ../portable-mxl-<version_id>/
+cp ./mxl-hands-on/dmf-mxl/build/Linux-Clang-Release_x86_64/lib/internal/*.so* ./portable-mxl-<version_id>/
+
+# Copy utility tools
+cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-info/mxl-info ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-gst/mxl-gst-sink ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-gst/mxl-gst-testsrc ../portable-mxl-<version_id>/
+
+# Copy flow configuration files that define media streams and RDMA data paths
+cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/lib/tests/data/*.json ../portable-mxl-<version_id>/
+
+# Copy the main RDMA demo executable used for testing inter-host communication
+cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-fabrics-demo/mxl-fabrics-demo ../portable-mxl-<version_id>/
+
+# Copy the Fabrics library containing the Libfabric transport implementation for RDMA operations
+cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/lib/fabrics/ofi/libmxl-fabrics.so ../portable-mxl-<version_id>/
+```
+
+**Files being copied:**
+- Shared libraries (`.so*`): Runtime dependencies
+- `mxl-info`: Information utility for MXL
+- `mxl-gst-sink`: GStreamer sink plugin
+- `mxl-gst-testsrc`: GStreamer test source plugin
+- Flow configuration (`.json`): Media stream and RDMA data path definitions
+- `mxl-fabrics-demo`: RDMA demo executable
+- `libmxl-fabrics.so`: Fabrics library with Libfabric transport implementation
+
+#### 4.3.3 Create the compressed archive
+
+```bash
+tar czf ../portable-mxl-<version_id>.tar.gz --directory=../portable-mxl-<version_id>/ .
+```
+
+This packages all resources into a compressed tar archive (`portable-mxl-<version_id>.tar.gz`). The archive can now be transferred to other test servers.
+
+> **Note:** After creating the archive, verify its contents:
+> ```bash
+> tar tzf ../portable-mxl-<version_id>.tar.gz | head -20
+> ```
+
+Upon completion, confirm that the archive is created without errors and all necessary binaries and configuration files are included.
+
+#### 4.3.4 Transfer the package to target servers
+
+Transfer the compressed archive and any additional libraries to the target test servers using `scp` (SSH copy):
+
+```bash
+# Transfer the main archive to the target server
+scp portable-mxl-<version_id>.tar.gz lab@<target_server_ip>:/home/lab/portable-mxl-<version_id>.tar.gz
+
+# Transfer any additional shared libraries if needed
+scp libmxl-common.so.1.1 lab@<target_server_ip>:/home/lab/portable-mxl-<version_id>/
+```
+
+**Parameters:**
+- `<target_server_ip>`: The IP address of the destination test server 
+- `lab`: The SSH username on the target server
+- `/home/lab/`: The destination directory path on the target server
+
+> **Note:** Ensure SSH access is configured between the build server and target servers before attempting the transfer. Both servers should have consistent directory structures for reproducibility.
+
+#### 4.3.5 Extract the package on the target server
+
+After the transfer completes, extract the archive on the target server to prepare the portable build for testing:
+
+**On the target server:**
+
+```bash
+# Navigate to the directory where the archive was transferred
+cd /home/lab/
+
+# Create the extraction directory if it doesn't exist
+mkdir -p portable-mxl-<version_id>
+
+# Extract the archive contents
+tar -xzf portable-mxl-<version_id>.tar.gz -C portable-mxl-<version_id>/
+```
+
+**Verify the extraction:**
+
+```bash
+# List the extracted contents to confirm all files are present
+ls -la portable-mxl-<version_id>/
+
+# Expected files should include:
+# - libmxl-*.so* (shared libraries)
+# - mxl-fabrics-demo (RDMA demo executable)
+# - mxl-info, mxl-gst-sink, mxl-gst-testsrc (utility tools)
+# - *.json configuration files
+```
+
+After successful extraction, the portable build is ready for test environment setup on the target server.
+
 
 ## 5. Verifying the Build
 
@@ -207,9 +317,19 @@ ls ~/mxl-hands-on/dmf-mxl/build/Linux-Clang-Release_x86_64
 
 Expected files include:
 
-- `mxl-fabrics-demo`
-- `mxl-gst-videotestsrc`
-- Flow configuration files (e.g., `v210_flow.json`)
+**Shared Libraries:**
+- `libmxl-*.so*` (Various MXL shared libraries)
+- `libmxl-fabrics.so` (Fabrics library with Libfabric transport implementation)
+- `libmxl-common.so*` (Common MXL runtime libraries)
+
+**Executable Tools:**
+- `mxl-info` (Information utility for MXL)
+- `mxl-gst-sink` (GStreamer sink plugin)
+- `mxl-gst-testsrc` (GStreamer test source plugin)
+- `mxl-fabrics-demo` (RDMA demo executable for inter-host communication)
+
+**Configuration Files:**
+- Flow configuration files (`.json`) such as `v210_flow.json`, which define media streams and RDMA data paths
 
 ### 5.2 Confirm Executable Permissions
 
@@ -248,8 +368,14 @@ This section explains how to execute RDMA functional tests using the **verbs** p
 Optionally, you can use **TCP** as a control to verify the build and environment.
 
 **Domain separation** is a core MXL feature that enables security, scalability, and workload isolation, as detailed in [Exercise 2 of cbcrc/mxl-hands-on](https://github.com/cbcrc/mxl-hands-on/blob/main/Exercises/Exercise2.md).  
-Due to domain separation, memory sharing between domains is performed by copy, while within a domain, sharing is done by direct access.  
-With this in mind, [PR#78](https://github.com/dmf-mxl/mxl/wiki/MXL-Inter-host-memory-sharing-%E2%80%90-Proposition#memory-models) implements RDMA by copy in its design.
+Due to domain separation, memory sharing between domains is always performed by copy, while sharing within a domain uses direct memory access.
+
+
+With this in mind, the MXL Fabrics API implements inter-host RDMA transfers using a copy-based memory model to preserve domain isolation.
+
+Additional background on the inter-host memory model is available here:
+[Inter-host memory sharing – MXL design notes](https://github.com/dmf-mxl/mxl/wiki/MXL-Inter-host-memory-sharing-%E2%80%90-Proposition#memory-models)
+
 
 ```mermaid
 sequenceDiagram
@@ -258,7 +384,7 @@ sequenceDiagram
 
     Target->>Target: 1. Start mxl-fabrics-demo<br>to generate target-info
     Target-->>Initiator: 2. Copy target-info
-    Initiator->>Initiator: 3. Generate an MXL Flow <br>(mxl-gst-videotestsrc)
+    Initiator->>Initiator: 3. Generate an MXL Flow <br>(mxl-gst-testsrc)
     Note right of Initiator: The Initiator (source) must<br/>  have a valid MXL Flow <br/> configured to transmit data <br/> to the Target (destination)
     Initiator->>Initiator: 4. Run mxl-fabrics-demo<br>with target-info
     Initiator-->>Target: 5. Establish RDMA connection
@@ -267,8 +393,14 @@ sequenceDiagram
 **Legend:**
 
 - **Target Server:** Runs `mxl-fabrics-demo`, generates `target-info`.
-- **Initiator Server:** Starts `mxl-gst-videotestsrc`, runs `mxl-fabrics-demo` with `target-info`.
+- **Initiator Server:** Starts `mxl-gst-testsrc`, runs `mxl-fabrics-demo` with `target-info`.
 - **Arrows between servers** show transfer of `target-info` and RDMA connection establishment.
+
+**Executable Files:**
+- `mxl-fabrics-demo`: RDMA demo application for inter-host communication and testing
+- `mxl-gst-testsrc`: GStreamer test source plugin that generates video grains for transmission
+- `mxl-gst-sink`: GStreamer sink plugin for receiving media streams
+- `mxl-info`: Information utility for inspecting MXL configurations
 
 ### Steps to test RDMA in MXL
 
@@ -294,16 +426,16 @@ Run the following command to start the demo target:
 ./mxl-fabrics-demo -d /dev/shm/mxl -f v210_flow.json -n <server_ip> --service 5000 -p verbs
 ```
 
->- The target invokes fi_fabric() and fi_domain() to create a libfabric fabric using the specified provider (e.g., verbs for RDMA).
->- It **allocates a ring buffer** — a region of shared memory — where incoming grains will be written.
->- A Target Flow object is created, containing the necessary connection information for the initiator (including the fabric address and memory registration key, or RKey)
+> The target invokes `fi_fabric()` and `fi_domain()` to create a libfabric fabric using the specified provider (e.g., verbs for RDMA).
+> - It **allocates a ring buffer** — a region of shared memory — where incoming grains will be written.
+> - A Target Flow object is created, containing the necessary connection information for the initiator (including the fabric address and memory registration key, or RKey)
 
 ### 7.2 Initiator Server
 
 #### Start an MXL source
 
 ```bash
-./mxl-gst-videotestsrc -d /dev/shm/mxl/domain -f v210_flow.json
+./mxl-gst-testsrc -d /dev/shm/mxl/domain -f v210_flow.json
 ```
 
 > This generates video grains (in V210 format) that will be transferred
@@ -329,25 +461,25 @@ Open a new session (tab) on the Initiator Server and run:
 <pre>
 [2025-10-29 18:39:09.640] [info] [Endpoint.cpp:109] Endpoint 17637498168822997553 created
 [2025-10-29 18:39:09.689] [info] [RCTarget.cpp:147] Received connected event notification, now connected.
-[2025-10-29 18:39:09.691] [info] [demo.cpp:503] Committed grain with index=33018 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:09.757] [info] [demo.cpp:503] Committed grain with index=33019 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:09.824] [info] [demo.cpp:503] Committed grain with index=33020 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:09.858] [info] [demo.cpp:503] Committed grain with index=33021 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:09.891] [info] [demo.cpp:503] Committed grain with index=33022 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:09.924] [info] [demo.cpp:503] Committed grain with index=33023 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:09.958] [info] [demo.cpp:503] Committed grain with index=33025 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:10.024] [info] [demo.cpp:503] Committed grain with index=33026 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33027 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33028 commitedSize=5529600 grainSize=5529600
-[2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33029 commitedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:09.691] [info] [demo.cpp:503] Committed grain with index=33018 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:09.757] [info] [demo.cpp:503] Committed grain with index=33019 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:09.824] [info] [demo.cpp:503] Committed grain with index=33020 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:09.858] [info] [demo.cpp:503] Committed grain with index=33021 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:09.891] [info] [demo.cpp:503] Committed grain with index=33022 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:09.924] [info] [demo.cpp:503] Committed grain with index=33023 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:09.958] [info] [demo.cpp:503] Committed grain with index=33025 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:10.024] [info] [demo.cpp:503] Committed grain with index=33026 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33027 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33028 committedSize=5529600 grainSize=5529600
+[2025-10-29 18:39:10.058] [info] [demo.cpp:503] Committed grain with index=33029 committedSize=5529600 grainSize=5529600
 </pre>
 
 </div>
 
 
 
->- On the target side, the "Comitted Grain" message shows each incoming frame being fully recived into the ring buffer
->- Each index, corresponds to one slot in the target's shared ring buffer
+>- On the target side, the "Committed Grain" message shows each incoming frame being fully received into the ring buffer
+>- Each index corresponds to one slot in the target's shared ring buffer.
 
 **Initiator Server:**  
 <div style="border:1px solid #333; padding:10px; border-radius:4px; background:#f7f7f7;">
@@ -374,7 +506,7 @@ Open a new session (tab) on the Initiator Server and run:
 
 - [EBU DMF/MXL Official page](https://tech.ebu.ch/dmf/mxl)
 - [CBC MXL Forked Repository](https://github.com/cbcrc/mxl-hands-on)
-- [Reidel MXL Repository (#PR78)](https://github.com/dmf-mxl/mxl/pull/78)
+- [MXL Fabrics API implementation discussion](https://github.com/dmf-mxl/mxl/pull/266)
 - [MXL Exercises](https://github.com/cbcrc/mxl-hands-on/tree/main/Exercises)
 - [Team Confluence Page](https://cbcradiocanada.atlassian.net/wiki/spaces/ENG/pages/5597298950/RDMA+Network) – Detailed explanations of test behavior and provider-level analysis
 - Reach out to Alexandre Dugas and Sunday Nyamweno for more detail
