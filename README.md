@@ -12,8 +12,8 @@ This documentation guides you through building and testing **RDMA (Remote Direct
 The documentation is organized to guide you through a progressive learning and implementation journey:
 
 ```sh
+README.md                       # This file - Overview and navigation
 docs/
-├── README.md                   # This file - Overview and navigation
 ├── setup.md                    # Foundation: RDMA prerequisites and libfabric
 ├── bgp-config.md               # Network: L3 BGP configuration for RDMA fabric
 ├── libfabric-fabtests.md       # Validation: Testing RDMA connectivity
@@ -34,7 +34,7 @@ scripts/
 
 Start with the foundational components that all RDMA applications depend on:
 
-#### 1.1 [Server RDMA Setup](./setup.md)
+#### 1.1 [Server RDMA Setup](./docs/setup.md)
 
 **Purpose:** Install and configure the RDMA stack on Ubuntu servers.
 
@@ -57,7 +57,7 @@ fi_info -p verbs  # Confirm Verbs provider is available
 ibv_devinfo       # Verify RDMA device detection
 ```
 
-#### 1.2 [BGP Network Configuration](./bgp-config.md)
+#### 1.2 [BGP Network Configuration](./docs/bgp-config.md)
 
 **Purpose:** Configure Layer 3 BGP routing between servers and switches to enable RDMA fabric connectivity.
 
@@ -92,7 +92,7 @@ The L3 BGP approach provides:
 
 ### Phase 2: RDMA Validation
 
-#### 2.1 [Libfabric Fabtests](./libfabric-fabtests.md)
+#### 2.1 [Libfabric Fabtests](./docs/libfabric-fabtests.md)
 
 **Purpose:** Validate RDMA connectivity and performance using standard Libfabric test utilities.
 
@@ -121,7 +121,7 @@ The L3 BGP approach provides:
 
 With RDMA infrastructure validated, proceed to application-level implementations:
 
-#### 3.1 [Intel Media Communications Mesh (MCM)](./intel-mcm.md)
+#### 3.1 [Intel Media Communications Mesh (MCM)](./docs/intel-mcm.md)
 
 **Purpose:** Implement Intel's MCM to understand how professional media applications leverage Libfabric and RDMA.
 
@@ -167,7 +167,7 @@ graph LR
 sudo media_proxy -d <vf_interface> --rdma_ip=<ip> --agent <agent_ip>:50051
 ```
 
-#### 3.2 [MXL with RDMA (Fabrics API)](./mxl-fabrics-rdma.md)
+#### 3.2 [MXL with RDMA (Fabrics API)](./docs/mxl-fabrics-rdma.md)
 
 **Purpose:** Implement the MXL (Media eXchange Layer) RDMA capability as defined in [PR#266](https://github.com/dmf-mxl/mxl/pull/266), enabling inter-host data transfer using Libfabric.
 
@@ -194,7 +194,7 @@ sudo media_proxy -d <vf_interface> --rdma_ip=<ip> --agent <agent_ip>:50051
 ```mermaid
 graph LR
     subgraph InitiatorServer["Initiator Server"]
-        GST["mxl-gst-videotestsrc<br/>(Generate grains)"]
+        GST["mxl-gst-testsrc<br/>(Generate grains)"]
         SHM_I["/dev/shm/mxl<br/>(Shared Memory)"]
         Demo_I["mxl-fabrics-demo<br/>(Initiator)<br/>- Remote Write<br/>- Uses target RKey"]
         
@@ -360,7 +360,7 @@ graph TB
 
 ### Common Concepts Across Implementations
 
-| Concept | Intel MCM | MXL- Fabrics API | Purpose |
+| Concept | Intel MCM | MXL Fabrics API | Purpose |
 |---------|-----------|-------------|---------|
 | **Libfabric Provider** | `verbs` | `verbs` | RDMA transport abstraction |
 | **Control Plane** | `mesh-agent` | Target-info exchange | Session establishment |
@@ -375,32 +375,32 @@ graph TB
 
 If you're starting from scratch:
 
-1. **Start with [setup.md](./setup.md)**
+1. **Start with [setup.md](./docs/setup.md)**
    - Install RDMA prerequisites
    - Build Libfabric with Verbs provider
    - Verify hardware detection
 
-2. **Configure network with [bgp-config.md](./bgp-config.md)**
+2. **Configure network with [bgp-config.md](./docs/bgp-config.md)**
    - Install FRR
    - Configure BGP peering
    - Verify route exchange
 
-3. **Validate RDMA with [libfabric-fabtests.md](./libfabric-fabtests.md)**
+3. **Validate RDMA with [libfabric-fabtests.md](./docs/libfabric-fabtests.md)**
    - Run `fi_msg` functional tests
    - Measure baseline TCP performance
    - Confirm Verbs provider performance gains
 
 4. **Choose your application path:**
-   - **Intel MCM path:** Follow [intel-mcm.md](./intel-mcm.md) for FFmpeg-based video streaming
-   - **MXL path:** Follow [mxl-fabrics-rdma.md](./mxl-fabrics-rdma.md) for grain-based media exchange
+   - **Intel MCM path:** Follow [intel-mcm.md](./docs/intel-mcm.md) for FFmpeg-based video streaming
+   - **MXL path:** Follow [mxl-fabrics-rdma.md](./docs/mxl-fabrics-rdma.md) for grain-based media exchange
 
 
 ### For Experienced Users
 
 If you already have RDMA infrastructure:
 
-- **Jump to [intel-mcm.md](./intel-mcm.md)** if you want to explore professional media streaming over RDMA
-- **Jump to [mxl-fabrics-rdma.md](./mxl-fabrics-rdma.md)** if you're interested in the MXL standard and PR#78 implementation
+- **Jump to [intel-mcm.md](./docs/intel-mcm.md)** if you want to explore professional media streaming over RDMA
+- **Jump to [mxl-fabrics-rdma.md](./docs/mxl-fabrics-rdma.md)** if you're interested in the MXL standard and Fabircs API implementation
 
 ## Troubleshooting Resources
 
