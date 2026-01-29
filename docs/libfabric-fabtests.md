@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Libfabric Fabtests User Guide
 
 This guide explains how to run and verify **Libfabric fabtests** across test servers.  

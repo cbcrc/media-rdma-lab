@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # RDMA Lab Documentation
 
 This documentation guides you through building and testing **RDMA (Remote Direct Memory Access)** capabilities in a professional media production environment. The lab implementation focuses on four main objectives:

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # MXL-Fabrics-API RDMA Build and Testing Guide
 
 This document provides a complete walkthrough for building and testing the **MXL-Fabrics-API** environment on Ubuntu 22.04 and 24.04 systems.  

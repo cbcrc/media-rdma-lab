@@ -1,4 +1,9 @@
 
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Simplified Sequence Diagram: RDMA Test (3 Stages)
 
 ```mermaid

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # MCM-Intel RDMA Build and Testing Guide
 
 This document provides a complete walkthrough for setting up and testing Intel's Media Communications Mesh (MCM) with RDMA capabilities on Ubuntu systems. It covers installation prerequisites, build instructions, environment configuration, and video streaming tests using both TCP and RDMA Verbs providers.
