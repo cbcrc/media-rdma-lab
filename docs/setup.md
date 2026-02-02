@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # How to Set Up a Server for RDMA
 This document provides a complete step-by-step procedure for preparing an Ubuntu server for RDMA (Remote Direct Memory Access).  
 Explanations are included throughout to clarify what each component does and why each step is required.

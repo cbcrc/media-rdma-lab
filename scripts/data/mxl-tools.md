@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 <!-- SPDX-FileCopyrightText: 2025 Contributors to the Media eXchange Layer project. -->
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
