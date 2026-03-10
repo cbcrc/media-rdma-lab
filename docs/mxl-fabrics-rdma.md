@@ -163,7 +163,7 @@ Ensure that your build_all.sh file contains the following settings:
 
 > **Note:** Docker must be run with increased shared memory (`--shm-size=2gb`) to ensure validation tests pass.
 >
-> To enable the Fabrics build, add `-DMXL_FABRICS_OFI=ON` to your CMake configuration.
+> To enable the Fabrics build, add `-DMXL_ENABLE_FABRICS_OFI=ON` to your CMake configuration.
 
 ```bash
 BASE_IMAGE_VERSION=22.04    # or 24.04 depending on your system
@@ -176,7 +176,7 @@ COMPILERS=("Linux-Clang-Release") # or "Linux-GCC-Release"
 
 # Configure CMake
 docker run --shm-size=2gb
-# in CMake build options add -DMXL_FABRICS_OFI=ON
+# in CMake build options add -DMXL_ENABLE_FABRICS_OFI=ON
 
 # Build Project
 docker run --shm-size=2gb
