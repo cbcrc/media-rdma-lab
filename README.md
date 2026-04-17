@@ -455,6 +455,8 @@ ls -la /dev/shm/mxl
 - **MXL PR#266:** https://github.com/dmf-mxl/mxl/pull/266
 - **Arista AI Fabric Guide:** https://www.arista.com/assets/data/pdf/AI-Network-Fabric_Deployment_Guide.pdf
 
+**Note: It is the responsibility of the user to verify that the application doesn't infridge any patent.**
+
 ### Internal Resources
 
 - **Team Confluence:** [RDMA Network Documentation](https://cbcradiocanada.atlassian.net/wiki/spaces/ENG/pages/5597298950/RDMA+Network)
