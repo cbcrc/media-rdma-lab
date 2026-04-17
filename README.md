@@ -455,7 +455,7 @@ ls -la /dev/shm/mxl
 - **MXL PR#266:** https://github.com/dmf-mxl/mxl/pull/266
 - **Arista AI Fabric Guide:** https://www.arista.com/assets/data/pdf/AI-Network-Fabric_Deployment_Guide.pdf
 
-**Note: It is the responsibility of the user to verify that the application doesn't infridge any patent.**
+**Note: It is the user's responsibility to ensure that their application does not infringe upon any patents.**
 
 ### Internal Resources
 
