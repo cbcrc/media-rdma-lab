@@ -133,3 +133,53 @@ fi_info
 
 If you see provider: verbs in the output, the setup is correct and complete.
 
+---
+
+## 5. Intel Ethernet (ICE) and RDMA Driver Setup (E810 / X722)
+
+Intel RDMA functionality depends on a tightly coupled stack between the Intel Ethernet driver (`ice`) and the RDMA driver (`irdma`).  
+For Intel E810 and X722 controllers, both components must be compatible versions to ensure RDMA (RoCE/verbs) works correctly.
+
+Official driver package:  
+https://www.intel.com/content/www/us/en/download/19632/linux-rdma-driver-for-the-e810-and-x722-intel-ethernet-controllers.html
+
+---
+
+### What This Section Does
+
+- Installs or updates the Intel Ethernet driver (`ice`)
+- Installs the matching out-of-tree RDMA driver (`irdma`)
+- Ensures kernel module compatibility between NIC and RDMA stack
+- Places the compiled RDMA kernel module into the correct kernel path
+
+---
+
+### Important Compatibility Note
+
+- `ice` and `irdma` **must come from compatible Intel releases**
+- Mismatched versions may cause:
+  - `Unknown symbol in module` errors
+  - `modprobe irdma` failures
+  - Missing RDMA devices in `ibv_devices`
+
+---
+
+## 5.1 Install / Update ICE Driver
+
+### Procedure
+
+1. Extract Intel `ice` driver package  
+2. Build kernel module  
+3. Install into kernel modules tree  
+4. Refresh module dependency database  
+
+### Commands
+
+```bash
+tar -xvzf ice-*.tar.gz
+cd ice-*/
+
+make -j "$(nproc)"
+sudo make install
+sudo depmod -a
+
