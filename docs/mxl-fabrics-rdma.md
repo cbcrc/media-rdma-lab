@@ -51,7 +51,7 @@ MXL supports two main modes for sharing grains:
 1. [Before You Begin](#1-before-you-begin)  
 2. [Prerequisite Libraries and Environment Checks](#2-prerequisite-libraries-and-environment-checks)  
 3. [Cloning the MXL Repository](#3-cloning-the-mxl-repository)  
-4. [Building MXL (Ubuntu 22.04 / 24.04)](#4-building-mxl-ubuntu-2204--2404)  
+4. [Building MXL (Ubuntu 24.04)](#4-building-mxl-ubuntu-2404)  
 5. [Verifying the Build](#5-verifying-the-build)  
 6. [Preparing the Test Environment](#6-preparing-the-test-environment)  
 7. [Running the RDMA Tests](#7-running-the-rdma-tests)  
@@ -67,7 +67,8 @@ It assumes an intermediate understanding of RDMA and Libfabric concepts.
 
 ### Required Equipment
 
-- Two RDMA-capable servers running **Ubuntu 22.04** or **Ubuntu 24.04**.
+- Two RDMA-capable servers running **Ubuntu 24.04**.
+   -  **Ubuntu 22.02** no longer supported (See: [Spring Cleaning](https://github.com/dmf-mxl/mxl/commit/b21e6e960b5940098d7ced3ced3e78ce72a1d30a)
 - Each server must have an **InfiniBand** or **RoCE**-enabled NIC.
 - Adequate disk space and available shared memory (`/dev/shm`).
 - Stable network connection between both systems.
@@ -141,35 +142,45 @@ ls
 
 ### 3.4. Switch the submodule to Fabrics-API [dmf-mxl/mxl](https://github.com/dmf-mxl/mxl) fork
 
-Review 'Fabrics 2/2: Implementation of the Fabrics API' to identify the repository and branch containing the current Fabrics implementation. Add the parent repository as a new remote and check out the branch containing the Fabrics implementation.
+The Fabrics API is now part of the main MXL codebase (merged via PR266). Add the parent repository as a new remote and check out the main branch containing the latest Fabrics implementation. No external fork or feature branch is required.
 
 ```bash
 cd dmf-mxl
 git remote -v # There should be 1 remote: origin
-git remote add rdma https://github.com/jonasohland/mxl.git
+git remote add rdma https://github.com/dmf-mxl/mxl.git
 git remote -v # There should be 2 remotes: origin and rdma
 git fetch rdma
-git checkout rdma/feature/fabrics/jonas/protocols
+git checkout main
 ```
 
-## 4. Building MXL (Ubuntu 22.04 / 24.04)
+## 4. Building MXL (Ubuntu 24.04)
 
 The MXL build process generates the necessary RDMA demo and source applications.
-Both servers should follow the same procedure.
+Build artifacts can be generated on one host and transferred between host for an efficient build process
 
 ### 4.1 Build Configuration
 
-Ensure that your build_all.sh file contains the following settings:
+Ensure that your build_linux.sh file contains the following settings:
 
 > **Note:** Docker must be run with increased shared memory (`--shm-size=2gb`) to ensure validation tests pass.
 >
 > To enable the Fabrics build, add `-DMXL_ENABLE_FABRICS_OFI=ON` to your CMake configuration.
 
 ```bash
-BASE_IMAGE_VERSION=22.04    # or 24.04 depending on your system
+MXL_PROJECT_PATH="dmf-mxl"   
+   
+   
+# Build Docker image
+docker build \
+   --build-arg BASE_IMAGE_VERSION=24.04 \
+   --build-arg USER_UID=${USER_UID} \
+   --build-arg USER_GID=${USER_GID} \
+   \
+   -t mxl_build_container_${COMP_LOWER} \
+   -f ${MXL_PROJECT_PATH}/.devcontainer/Dockerfile \
+   ${MXL_PROJECT_PATH}/.devcontainer
 
-MXL_PROJECT_PATH="./dmf-mxl"
--f ${MXL_PROJECT_PATH}/.devcontainer/Dockerfile.ubuntu-legacy # ensure the changes in devcontainer reflects the BASE_IMAGE_VERSION, choose accordingly 
+# ensure the changes in devcontainer reflects the BASE_IMAGE_VERSION, choose accordingly 
 
 ARCHITECTURES=("x86_64")
 COMPILERS=("Linux-Clang-Release") # or "Linux-GCC-Release"
@@ -186,16 +197,12 @@ docker run --shm-size=2gb
 
 ```
 
-> **Note**: Ubuntu 24.04 builds are generally smoother due to updated dependency compatibility.
->
-> If building on 22.04, ensure Docker is correctly configured and dependencies are fully installed.*
-
 ### 4.2 Run the Build
 
 From the repository root (~/mxl-hands-on):
 
 ```bash
-./build_all.sh
+./build_linux.sh
 ```
 ### 4.3 Package Built Resources
 
@@ -216,22 +223,22 @@ Copy all necessary libraries, tools, and configuration files into the portable d
 
 ```bash
 # Copy shared library files required for runtime execution
-cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/lib/*.so* ../portable-mxl-<version_id>/
-cp ./mxl-hands-on/dmf-mxl/build/Linux-Clang-Release_x86_64/lib/internal/*.so* ./portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-<compiler>-Release/lib/*.so* ../portable-mxl-<version_id>/
+cp ./mxl-hands-on/dmf-mxl/build/Linux-<compiler>-Release/lib/internal/*.so* ./portable-mxl-<version_id>/
 
 # Copy utility tools
-cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-info/mxl-info ../portable-mxl-<version_id>/
-cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-gst/mxl-gst-sink ../portable-mxl-<version_id>/
-cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-gst/mxl-gst-testsrc ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-<compiler>-Release/tools/mxl-info/mxl-info ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-<compiler>-Release/tools/mxl-gst/mxl-gst-sink ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-<compiler>-Release/tools/mxl-gst/mxl-gst-testsrc ../portable-mxl-<version_id>/
 
 # Copy flow configuration files that define media streams and RDMA data paths
-cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/lib/tests/data/*.json ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-<compiler>-Release/lib/tests/data/*.json ../portable-mxl-<version_id>/
 
 # Copy the main RDMA demo executable used for testing inter-host communication
-cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/tools/mxl-fabrics-demo/mxl-fabrics-demo ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-<compiler>-Release/tools/mxl-fabrics-demo/mxl-fabrics-demo ../portable-mxl-<version_id>/
 
 # Copy the Fabrics library containing the Libfabric transport implementation for RDMA operations
-cp ./dmf-mxl/build/Linux-Clang-Release_x86_64/lib/fabrics/ofi/libmxl-fabrics.so ../portable-mxl-<version_id>/
+cp ./dmf-mxl/build/Linux-<compiler>-Release/lib/fabrics/ofi/libmxl-fabrics.so ../portable-mxl-<version_id>/
 ```
 
 **Files being copied:**
@@ -317,7 +324,7 @@ After the build completes successfully, verify the presence of the generated exe
 ### 5.1 Check Build Artifacts
 
 ```bash
-ls ~/mxl-hands-on/dmf-mxl/build/Linux-Clang-Release_x86_64
+ls ~/mxl-hands-on/dmf-mxl/build/Linux-<compiler>-Release
 ```
 
 Expected files include:
@@ -420,6 +427,9 @@ sequenceDiagram
 
 4. **Start the `mxl-fabrics-demo` on the initiator**  
    Use the appropriate flow file and the `target-info` token to connect to the target.
+
+5. **Start the `mxl-gst-sink` to visualize MXL grains on target**
+   Refer to the correct flow file found in the targets `/dev/shm/mxl/` directory  
 
 Follow these steps to validate RDMA functionality and domain separation in your MXL environment.
 
