@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # RDMA Lab Documentation
 
 This documentation guides you through building and testing **RDMA (Remote Direct Memory Access)** capabilities in a professional media production environment. The lab implementation focuses on four main objectives:
@@ -449,6 +454,8 @@ ls -la /dev/shm/mxl
 - **MXL Standard:** https://tech.ebu.ch/dmf/mxl
 - **MXL PR#266:** https://github.com/dmf-mxl/mxl/pull/266
 - **Arista AI Fabric Guide:** https://www.arista.com/assets/data/pdf/AI-Network-Fabric_Deployment_Guide.pdf
+
+**Note: It is the user's responsibility to ensure that their application does not infringe upon any patents.**
 
 ### Internal Resources
 

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # BGP at a Server Level; Configuration and Validation Guide (FRR)
 
 This guide provides instructions for configuring and validating **BGP (Border Gateway Protocol)** on lab servers using **FRR (Free Range Routing)**.  

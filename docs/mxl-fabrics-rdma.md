@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 CBC/Radio-Canada
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # MXL-Fabrics-API RDMA Build and Testing Guide
 
 This document provides a complete walkthrough for building and testing the **MXL-Fabrics-API** environment on a Ubuntu 24.04 system.  
@@ -72,7 +77,7 @@ It assumes an intermediate understanding of RDMA and Libfabric concepts.
 ### Required Equipment
 
 - Two RDMA-capable servers running **Ubuntu 24.04**.
-   -  **Ubuntu 22.02** no longer supported ([Spring Cleaning](https://github.com/dmf-mxl/mxl/commit/b21e6e960b5940098d7ced3ced3e78ce72a1d30a))
+   -  **Ubuntu 22.04** no longer supported ([Spring Cleaning](https://github.com/dmf-mxl/mxl/commit/b21e6e960b5940098d7ced3ced3e78ce72a1d30a))
 - Each server must have an **InfiniBand** or **RoCE**-enabled NIC.
 - Adequate disk space and available shared memory (`/dev/shm`).
 - Stable network connection between both systems.
@@ -182,7 +187,7 @@ Ensure that your build_linux.sh file contains the following settings:
 
 > **Note:** Docker must be run with increased shared memory (`--shm-size=2gb`) to ensure validation tests pass.
 >
-> To enable the Fabrics build, add `-DMXL_FABRICS_OFI=ON` to your CMake configuration.
+> To enable the Fabrics build, add `-DMXL_ENABLE_FABRICS_OFI=ON` to your CMake configuration.
 
 ```bash
 MXL_PROJECT_PATH="dmf-mxl"   
@@ -204,7 +209,7 @@ COMPILERS=("Linux-Clang-Release") # or "Linux-GCC-Release"
 
 # Configure CMake
 docker run --shm-size=2gb
-# in CMake build options add -DMXL_FABRICS_OFI=ON
+# in CMake build options add -DMXL_ENABLE_FABRICS_OFI=ON
 
 # Build Project
 docker run --shm-size=2gb
@@ -608,3 +613,4 @@ Grain/sample rate: 30000/1001
 - [MXL Exercises](https://github.com/cbcrc/mxl-hands-on/tree/main/Exercises)
 - [Team Confluence Page](https://cbcradiocanada.atlassian.net/wiki/spaces/ENG/pages/5597298950/RDMA+Network) – Detailed explanations of test behavior and provider-level analysis
 - Reach out to Sunday Nyamweno and Anthony Royer for more detail
+
